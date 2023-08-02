@@ -94,7 +94,19 @@ public final class HttpSinkTask extends SinkTask {
                     }
                 }
 
-                recordSender.send(records);
+                try {
+                    recordSender.send(records);
+                } 
+                catch (final ConnectException e) {
+                    if (reporter != null) {
+                        for (final SinkRecord record : records) {
+                            reporter.report(record, e);
+                        }
+                    } else {
+                        // otherwise, re-throw the exception
+                        throw new ConnectException(e.getMessage());
+                    }
+                }
             } else {
                 // send records to the sender one at a time
                 for (final SinkRecord record : records) {
